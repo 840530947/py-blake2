@@ -1,3 +1,5 @@
-from whirlpool import Whirlpool
+from blake2 import Blake2
 
-w = Whirlpool()
+blake = Blake2()
+
+print(blake.getHash("hello world"))

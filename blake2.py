@@ -1,4 +1,4 @@
-class Whirlpool:
+class Blake2:
     def __init__(self):
         pass
 
