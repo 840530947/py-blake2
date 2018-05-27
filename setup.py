@@ -1,5 +1,5 @@
-from blake2 import Blake2
+from blake2 import Blake2b
 
-blake = Blake2()
+blake = Blake2b()
 
-print(blake.getHash("hello world"))
+print(blake.getHash("hello world", "key"))
