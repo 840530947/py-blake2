@@ -1,4 +1,4 @@
-from blake2 import Blake2b
+from src.blake2 import Blake2b
 
 blake = Blake2b()
 
