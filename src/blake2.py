@@ -36,10 +36,21 @@ class Blake2b:
     def compress(self, statevector, block, count):
         workvec = statevector[:].extend(self.initvector[:])
 
+        workvec[12] ^= self.low(count, self.blocksize / 2)
+        workvec[13] ^= self.high(count, self.blocksize / 2)
+
 
         pass
 
     def mix(self, v, m):
         pass
 
+    def r_rotate(self, number, d):
+        return (number >> d) | (number << (64 - d)) & 0xFFFFFFFF
+
+    def high(self, number, d):
+        return number >> d
+
+    def low(self, number, d):
+        return number & ((1 << d) - 1)
 
