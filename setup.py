@@ -6,5 +6,5 @@ blake = Blake2b()
 bb = hashlib.blake2b(b'input').hexdigest()
 print(bb)
 
-res = blake.getHash(b'input')
+res = blake.getHash(b'input').hex()
 print(res)

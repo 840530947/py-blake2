@@ -1,6 +1,7 @@
 from src.helper import Helper
 from functools import reduce
 
+
 class Blake2b:
 
     def __init__(self):
@@ -69,7 +70,7 @@ class Blake2b:
             bytearray()
         )
 
-        return state[:hashlen].hex()
+        return state[:hashlen]
 
     def compress(self, statevector, block, count, last=False):
         workvec = statevector[:] + self.initvector[:]
