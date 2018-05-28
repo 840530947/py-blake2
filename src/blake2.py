@@ -78,7 +78,7 @@ class Blake2b:
         workvec[13] ^= Helper.high(count, int(self.blocksize / 2))
 
         if last:
-            workvec[14] ^= ((1 << int(self.blocksize / 2)) - 1)
+            workvec[14] ^= self.intsize
 
         messages = [int.from_bytes(block[i:i + 8], byteorder='little') for i in range(0, len(block), 8)]
 
@@ -99,17 +99,17 @@ class Blake2b:
 
     def mix(self, v, i, m):
         r = v[:]
-        t = (1 << 64) - 1
+        t = self.intsize
 
         r[i[0]] = (r[i[0]] + r[i[1]] + m[0]) & t
-        r[i[3]] = Helper.rotate(r[i[3]] ^ r[i[0]], 32, self.intsize) & t
+        r[i[3]] = Helper.rotate(r[i[3]] ^ r[i[0]], 32, t) & t
         r[i[2]] = (r[i[2]] + r[i[3]]) & t
-        r[i[1]] = Helper.rotate(r[i[1]] ^ r[i[2]], 24, self.intsize) & t
+        r[i[1]] = Helper.rotate(r[i[1]] ^ r[i[2]], 24, t) & t
 
         r[i[0]] = (r[i[0]] + r[i[1]] + m[1]) & t
-        r[i[3]] = Helper.rotate(r[i[3]] ^ r[i[0]], 16, self.intsize) & t
+        r[i[3]] = Helper.rotate(r[i[3]] ^ r[i[0]], 16, t) & t
         r[i[2]] = (r[i[2]] + r[i[3]]) & t
-        r[i[1]] = Helper.rotate(r[i[1]] ^ r[i[2]], 63, self.intsize) & t
+        r[i[1]] = Helper.rotate(r[i[1]] ^ r[i[2]], 63, t) & t
         return r
 
 
