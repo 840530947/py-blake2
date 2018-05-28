@@ -1,4 +1,4 @@
-from src.helper import Helper
+from .helper import Helper
 from functools import reduce
 
 
