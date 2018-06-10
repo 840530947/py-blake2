@@ -1,7 +1,7 @@
 class Helper:
     @staticmethod
-    def rotate(number, d, size):
-        return (number >> d) | (number << (64 - d)) & size
+    def rotate(number, d, size, bytes):
+        return (number >> d) | (number << int(bytes - d)) & size
 
     @staticmethod
     def high(number, d):

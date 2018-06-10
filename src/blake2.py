@@ -2,21 +2,9 @@ from .helper import Helper
 from functools import reduce
 
 
-class Blake2b:
-
+class Blake2:
     def __init__(self):
-
-        self.initvector = [
-            0x6A09E667F3BCC908,
-            0xBB67AE8584CAA73B,
-            0x3C6EF372FE94F82B,
-            0xA54FF53A5F1D36F1,
-            0x510E527FADE682D1,
-            0x9B05688C2B3E6C1F,
-            0x1F83D9ABFB41BD6B,
-            0x5BE0CD19137E2179
-        ]
-
+        
         self.sigma = [
             [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
             [14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3],
@@ -30,17 +18,15 @@ class Blake2b:
             [10, 2, 8, 4, 7, 6, 1, 5, 15, 11, 9, 14, 3, 12, 13, 0],
         ]
 
-        self.blocksize = 128
-        self.intsize = (1 << 64) - 1
 
-    def getHash(self, message, key=None, hashlen=64):
+    def getHash(self, message, key, hashlen):
         state = self.initvector[:]
-
+        
         message = bytearray(message)
 
         keylen = 0
         if key is not None:
-            key = bytearray(key[:64])
+            key = bytearray(key[:int(self.blocksize / 2)])
             keylen = len(key)
 
         state[0] ^= 0x01010000 | (keylen << 8) | hashlen
@@ -65,7 +51,7 @@ class Blake2b:
         block = block + bytearray([0 for _ in range(self.blocksize - len(block))])
 
         state = reduce(
-            lambda x, y: x + y.to_bytes(8, byteorder='little'),
+            lambda x, y: x + y.to_bytes(self.intbytes, byteorder='little'),
             self.compress(state, block, compressed, True),
             bytearray()
         )
@@ -81,9 +67,11 @@ class Blake2b:
         if last:
             workvec[14] ^= self.intsize
 
-        messages = [int.from_bytes(block[i:i + 8], byteorder='little') for i in range(0, len(block), 8)]
+        messages = [
+            int.from_bytes(block[i:i + self.intbytes], byteorder='little') for i in range(0, len(block), self.intbytes)
+        ]
 
-        for i in range(12):
+        for i in range(self.rounds):
             schedule = self.sigma[i % 10]
 
             workvec = self.mix(workvec, [0, 4, 8, 12], [messages[schedule[0]], messages[schedule[1]]])
@@ -101,16 +89,73 @@ class Blake2b:
     def mix(self, v, i, m):
         r = v[:]
         t = self.intsize
-
+        b = self.blocksize / 2
+        
         r[i[0]] = (r[i[0]] + r[i[1]] + m[0]) & t
-        r[i[3]] = Helper.rotate(r[i[3]] ^ r[i[0]], 32, t) & t
+        r[i[3]] = Helper.rotate(r[i[3]] ^ r[i[0]], self.rots[0], t, b) & t
         r[i[2]] = (r[i[2]] + r[i[3]]) & t
-        r[i[1]] = Helper.rotate(r[i[1]] ^ r[i[2]], 24, t) & t
+        r[i[1]] = Helper.rotate(r[i[1]] ^ r[i[2]], self.rots[1], t, b) & t
 
         r[i[0]] = (r[i[0]] + r[i[1]] + m[1]) & t
-        r[i[3]] = Helper.rotate(r[i[3]] ^ r[i[0]], 16, t) & t
+        r[i[3]] = Helper.rotate(r[i[3]] ^ r[i[0]], self.rots[2], t, b) & t
         r[i[2]] = (r[i[2]] + r[i[3]]) & t
-        r[i[1]] = Helper.rotate(r[i[1]] ^ r[i[2]], 63, t) & t
+        r[i[1]] = Helper.rotate(r[i[1]] ^ r[i[2]], self.rots[3], t, b) & t
         return r
+
+
+class Blake2s(Blake2):
+    def __init__(self):
+        super().__init__()
+
+        self.rounds = 10
+        self.blocksize = 64
+        self.intbytes = 4
+        self.intsize = (1 << 32) - 1
+
+        self.initvector = [
+            0x6a09e667, 
+            0xbb67ae85,
+            0x3c6ef372, 
+            0xa54ff53a,
+            0x510e527f, 
+            0x9b05688c,
+            0x1f83d9ab, 
+            0x5be0cd19
+        ]
+
+        self.rots = [
+            16, 12, 8, 7
+        ]
+
+    def getHash(self, message, key=None, hashlen=32):
+        return super().getHash(message, key, hashlen)
+
+
+class Blake2b(Blake2):
+    def __init__(self):
+        super().__init__()
+
+        self.rounds = 12
+        self.intbytes = 8
+        self.blocksize = 128
+        self.intsize = (1 << 64) - 1
+        
+        self.initvector = [
+            0x6A09E667F3BCC908,
+            0xBB67AE8584CAA73B,
+            0x3C6EF372FE94F82B,
+            0xA54FF53A5F1D36F1,
+            0x510E527FADE682D1,
+            0x9B05688C2B3E6C1F,
+            0x1F83D9ABFB41BD6B,
+            0x5BE0CD19137E2179
+        ]
+
+        self.rots = [
+            32, 24, 16, 63
+        ]
+
+    def getHash(self, message, key=None, hashlen=64):
+        return super().getHash(message, key, hashlen)
 
 
